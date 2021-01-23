@@ -48,6 +48,33 @@ impl JsonParser {
             None => DEFAULT_INTEGER_VALUE,
         }
     }
+
+    fn safe_read_array(&self, key: &str) -> Option<&Vec<Value>> {
+        let value: Option<&Value> = self.json_data.get(key);
+
+        match value {
+            Some(value) => {
+                let inner_value: Option<&Vec<Value>> = value.as_array();
+                match inner_value {
+                    Some(value) => Some(value),
+                    None => None,
+                }
+            }
+            None => None,
+        }
+    }
+}
+
+trait FromJson<T> {
+    fn from_parser(json: JsonParser) -> T {
+        unimplemented!("Method not implemented")
+    }
+    fn from_json_string(json: &str) -> Result<T, Error> {
+        unimplemented!("Method not implemented")
+    }
+    fn from_json_object(json: Value) -> Result<T, Error> {
+        unimplemented!("Method not implemented")
+    }
 }
 
 // TODO: Move profile icon id to u8, summoner levl to u16
@@ -62,12 +89,9 @@ struct LeagueSummoner {
     summoner_level: u64,
 }
 
-impl LeagueSummoner {
-    fn from_json_string(json: &str) -> Result<Self, Error> {
-        let json_value: serde_json::Value = serde_json::from_str(json)?;
-        let json_parser: JsonParser = JsonParser::new(json_value);
-
-        Ok(LeagueSummoner {
+impl FromJson<LeagueSummoner> for LeagueSummoner {
+    fn from_parser(json_parser: JsonParser) -> LeagueSummoner {
+        LeagueSummoner {
             id: json_parser.safe_read_str("id"),
             account_id: json_parser.safe_read_str("accountId"),
             puuid: json_parser.safe_read_str("puuid"),
@@ -75,12 +99,73 @@ impl LeagueSummoner {
             profile_icon_id: json_parser.safe_read_int("profileIconId"),
             revision_date: json_parser.safe_read_int("revisionDate"),
             summoner_level: json_parser.safe_read_int("summonerLevel"),
-        })
+        }
+    }
+
+    fn from_json_string(json: &str) -> Result<Self, Error> {
+        let json_value: serde_json::Value = serde_json::from_str(json)?;
+        let json_parser: JsonParser = JsonParser::new(json_value);
+
+        Ok(LeagueSummoner::from_parser(json_parser))
     }
 }
 
 struct LeagueMatch {
+    platform_id: String,
+    game_id: u64,
+    champion: u64,
+    queue: u64,
+    season: u64,
+    timestamp: u64,
+    role: String,
+    lane: String,
+}
 
+impl FromJson<LeagueMatch> for LeagueMatch {
+    fn from_parser(json_parser: JsonParser) -> LeagueMatch {
+        LeagueMatch {
+            platform_id: json_parser.safe_read_str("platformId"),
+            game_id: json_parser.safe_read_int("gameId"),
+            champion: json_parser.safe_read_int("champion"),
+            queue: json_parser.safe_read_int("queue"),
+            season: json_parser.safe_read_int("season"),
+            timestamp: json_parser.safe_read_int("timestamp"),
+            role: json_parser.safe_read_str("role"),
+            lane: json_parser.safe_read_str("lane"),
+        }
+    }
+
+    fn from_json_string(json: &str) -> Result<Self, Error> {
+        let json_value: serde_json::Value = serde_json::from_str(json)?;
+        let json_parser: JsonParser = JsonParser::new(json_value);
+        Ok(LeagueMatch::from_parser(json_parser))
+    }
+
+    fn from_json_object(json: Value) -> Result<Self, Error> {
+        let json_parser: JsonParser = JsonParser::new(json);
+        Ok(LeagueMatch::from_parser(json_parser))
+    }
+}
+
+struct LeagueMatches {
+    matches: Vec<LeagueMatch>,
+}
+
+impl FromJson<LeagueMatches> for LeagueMatches {
+    fn from_json_string(json: &str) -> Result<Self, Error> {
+        let json_value: serde_json::Value = serde_json::from_str(json)?;
+        let json_parser: JsonParser = JsonParser::new(json_value);
+
+        let mut matches: Vec<LeagueMatch> = Vec::new();
+
+        let json_matches: &Vec<Value> = json_parser.safe_read_array("matches").unwrap();
+
+        for mut _match in json_matches.to_owned() {
+            matches.push(LeagueMatch::from_json_object(_match.take()).unwrap());
+        }
+
+        Ok(LeagueMatches { matches })
+    }
 }
 
 struct LeagueService {}
@@ -108,17 +193,18 @@ impl LeagueService {
         LeagueSummoner::from_json_string(&*json_string).unwrap()
     }
 
-    async fn fetch_summoner_matches<'s>(summoner_name: &'s str) -> String {
+    async fn fetch_summoner_matches<'s>(summoner_name: &'s str) -> LeagueMatches {
         let league_summoner: LeagueSummoner = LeagueService::fetch_summoner(summoner_name).await;
 
         let matches_url = LeagueService::get_matches_url(league_summoner.account_id.as_str());
 
-        LeagueService::fetch(matches_url.as_str()).await
+        let json_string = LeagueService::fetch(matches_url.as_str()).await;
+
+        LeagueMatches::from_json_string(&*json_string).unwrap()
     }
 
     fn get_summoner_url<'s>(summoner_name: &'s str) -> String {
-        let url_parts: [&'s str; 3] =
-            [BASE_URL, "summoner/v4/summoners/by-name/", summoner_name];
+        let url_parts: [&'s str; 3] = [BASE_URL, "summoner/v4/summoners/by-name/", summoner_name];
         url_parts.concat()
     }
 
@@ -130,10 +216,13 @@ impl LeagueService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let matches = LeagueService::fetch_summoner_matches("Ricefields").await;
+    let league_matches: LeagueMatches = LeagueService::fetch_summoner_matches("Ricefields").await;
     // let league_summoner = LeagueService::fetch_summoner("Ricefields").await;
 
-    println!("{}", matches);
+    for _match in league_matches.matches {
+        println!("Role {} \n", _match.role);
+    }
+
 
     Result::Ok(())
 }
