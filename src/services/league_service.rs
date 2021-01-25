@@ -1,6 +1,4 @@
-use crate::models::LeagueSummoner;
-use crate::models::LeagueMatches;
-use crate::models::FromJson;
+use crate::models::{LeagueSummoner, LeagueMatches, FromJson, LeagueMatchesDetails, LeagueMatchDetail};
 
 // TODO: Move to ENV variables
 const RIOT_API_KEY: &'static str = "RGAPI-8296bf16-098e-44d8-a901-c42e9664b952";
@@ -41,6 +39,35 @@ impl LeagueService {
         LeagueMatches::from_json_string(&*json_string).unwrap()
     }
 
+    pub async fn fetch_summoner_matches_details<'s>(summoner_name: &'s str) {
+        let league_summoner: LeagueSummoner = LeagueService::fetch_summoner(summoner_name).await;
+
+        let matches_url = LeagueService::get_matches_url(league_summoner.account_id.as_str());
+
+        let json_string = LeagueService::fetch(matches_url.as_str()).await;
+
+        let league_matches = LeagueMatches::from_json_string(&*json_string).unwrap();
+
+        let league_matches_details = LeagueMatchesDetails::new();
+
+        let mut summoner_match_requests: Vec<LeagueMatchDetail> = Vec::with_capacity(league_matches.matches.len());
+
+
+        // TODO for each league_matches we have to request match detail and create response
+        // append each detail to league_matches_details
+        for _match in league_matches.matches {
+        }
+
+    }
+
+    async fn getch_summoner_match_detail(match_id: u64) -> LeagueMatchDetail {
+        let match_detail_url = LeagueService::get_match_details_url(&*match_id.to_string());
+
+        let json_string = LeagueService::fetch(match_detail_url.as_str()).await;
+
+        LeagueMatchDetail::from_json_string(&*json_string).unwrap()
+    }
+
     pub fn get_summoner_url<'s>(summoner_name: &'s str) -> String {
         let url_parts: [&'s str; 3] = [BASE_URL, "summoner/v4/summoners/by-name/", summoner_name];
         url_parts.concat()
@@ -48,6 +75,11 @@ impl LeagueService {
 
     pub fn get_matches_url<'s>(account_id: &'s str) -> String {
         let url_parts = [BASE_URL, "match/v4/matchlists/by-account/", account_id];
+        url_parts.concat()
+    }
+
+    pub fn get_match_details_url<'s>(match_id: &'s str) -> String {
+        let url_parts = [BASE_URL, " /lol/match/v4/matches/", match_id];
         url_parts.concat()
     }
 }

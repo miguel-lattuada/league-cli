@@ -2,15 +2,18 @@ use crate::models::from_json::FromJson;
 use crate::utils::JsonParser;
 use serde_json::{Value, Error};
 
+/**
+ * LeagueMatch is an item of the LeagueMatches
+ */
 pub struct LeagueMatch {
-    platform_id: String,
-    game_id: u64,
-    champion: u64,
-    queue: u64,
-    season: u64,
-    timestamp: u64,
+    pub platform_id: String,
+    pub game_id: u64,
+    pub champion: u64,
+    pub queue: u64,
+    pub season: u64,
+    pub timestamp: u64,
     pub role: String,
-    lane: String,
+    pub lane: String,
 }
 
 impl FromJson<LeagueMatch> for LeagueMatch {
