@@ -10,6 +10,17 @@ impl LeagueMatchesDetails {
             matches_details: Vec::new()
         }
     }
+
+    // TODO: move this into a trait that every model should implement
+    // Consider CliDisplay { into_formatted_string() -> String }
+    pub fn into_string(self) -> String {
+        let mut result = String::from("");
+        for match_detail in self.matches_details {
+            result.push_str(&match_detail.into_string());
+            result.push_str("\n");
+        }
+        result
+    }
     
     pub fn append_match(mut self, league_match_detail: LeagueMatchDetail) {
         self.matches_details.push(league_match_detail);

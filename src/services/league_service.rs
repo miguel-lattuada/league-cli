@@ -1,7 +1,8 @@
 use crate::models::{LeagueSummoner, LeagueMatches, FromJson, LeagueMatchesDetails, LeagueMatchDetail};
+use futures_util::future::join_all;
 
 // TODO: Move to ENV variables
-const RIOT_API_KEY: &'static str = "RGAPI-8296bf16-098e-44d8-a901-c42e9664b952";
+const RIOT_API_KEY: &'static str = "RGAPI-6f99f43b-e5bf-46fd-9b38-b2f80ca2314a";
 const BASE_URL: &'static str = "https://la2.api.riotgames.com/lol/";
 
 pub struct LeagueService {}
@@ -39,7 +40,7 @@ impl LeagueService {
         LeagueMatches::from_json_string(&*json_string).unwrap()
     }
 
-    pub async fn fetch_summoner_matches_details<'s>(summoner_name: &'s str) {
+    pub async fn fetch_summoner_matches_details<'s>(summoner_name: &'s str) -> LeagueMatchesDetails {
         let league_summoner: LeagueSummoner = LeagueService::fetch_summoner(summoner_name).await;
 
         let matches_url = LeagueService::get_matches_url(league_summoner.account_id.as_str());
@@ -48,19 +49,27 @@ impl LeagueService {
 
         let league_matches = LeagueMatches::from_json_string(&*json_string).unwrap();
 
-        let league_matches_details = LeagueMatchesDetails::new();
+        let mut league_matches_details = LeagueMatchesDetails::new();
 
-        let mut summoner_match_requests: Vec<LeagueMatchDetail> = Vec::with_capacity(league_matches.matches.len());
-
+        let mut summoner_match_requests: Vec<_> = Vec::with_capacity(league_matches.matches.len());
 
         // TODO for each league_matches we have to request match detail and create response
         // append each detail to league_matches_details
-        for _match in league_matches.matches {
+        // for _match in league_matches.matches {
+        //     summoner_match_requests.push(LeagueService::fetch_summoner_match_detail(_match.game_id));
+        // }
+
+        for index in 0..2 {
+            let _match = league_matches.matches.get(index).unwrap();
+            summoner_match_requests.push(LeagueService::fetch_summoner_match_detail(_match.game_id));
         }
 
+        league_matches_details.matches_details = join_all(summoner_match_requests).await;
+
+        league_matches_details
     }
 
-    async fn getch_summoner_match_detail(match_id: u64) -> LeagueMatchDetail {
+    async fn fetch_summoner_match_detail(match_id: u64) -> LeagueMatchDetail {
         let match_detail_url = LeagueService::get_match_details_url(&*match_id.to_string());
 
         let json_string = LeagueService::fetch(match_detail_url.as_str()).await;
@@ -79,7 +88,7 @@ impl LeagueService {
     }
 
     pub fn get_match_details_url<'s>(match_id: &'s str) -> String {
-        let url_parts = [BASE_URL, " /lol/match/v4/matches/", match_id];
+        let url_parts = [BASE_URL, "match/v4/matches/", match_id];
         url_parts.concat()
     }
 }

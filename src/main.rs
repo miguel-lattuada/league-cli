@@ -2,7 +2,7 @@ mod models;
 mod utils;
 mod services;
 
-use models::{LeagueMatches};
+use models::{LeagueMatches, LeagueMatchesDetails, LeagueMatchDetail};
 use services::{LeagueService};
 
 #[tokio::main]
@@ -11,13 +11,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // let summoner = LeagueService::fetch_summoner("Ricefields");
 
-    let league_matches: LeagueMatches = LeagueService::fetch_summoner_matches("Ricefields").await;
+    // let league_matches: LeagueMatches = LeagueService::fetch_summoner_matches("Ricefields").await;
     // let league_summoner = LeagueService::fetch_summoner("Ricefields").await;
 
-    for _match in league_matches.matches {
-        println!("Role {}", _match.game_id);
-    }
+    let league_matches: LeagueMatchesDetails = LeagueService::fetch_summoner_matches_details("Ricefields").await;
 
+    print!("{}", league_matches.into_string());
 
     Result::Ok(())
 }

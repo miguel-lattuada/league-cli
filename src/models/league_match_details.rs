@@ -5,7 +5,20 @@ use serde_json::{Error, Value};
 pub struct LeagueMatchDetail {
     // TODO check on league match data and how to set it
     // league_match: LeagueMatch,
-    participants: Vec<LeagueMatchParticipant>,
+    pub participants: Vec<LeagueMatchParticipant>,
+}
+
+impl LeagueMatchDetail {
+    // TODO: move this into a trait that every model should implement
+    // Consider CliDisplay { into_formatted_string() -> String }
+    pub fn into_string(self) -> String {
+        let mut result = String::from("");
+        for participant in self.participants {
+            result.push_str(&participant.into_string());
+            result.push_str("\n");
+        }
+        result
+    }
 }
 
 impl FromJson<LeagueMatchDetail> for LeagueMatchDetail {

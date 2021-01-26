@@ -11,6 +11,23 @@ pub struct LeagueMatchParticipant {
     highest_rank: String,
 }
 
+impl LeagueMatchParticipant {
+    // TODO: move this into a trait that every model should implement
+    // Consider CliDisplay { into_formatted_string() -> String }
+    pub fn into_string(self) -> String {
+        let mut result = String::from("");
+
+        result.push_str("Champion: ");
+        result.push_str(&self.champion_id.to_string());
+        result.push_str(" -> ");
+        result.push_str("(");
+        result.push_str(&self.team_id.to_string());
+        result.push_str(")");
+
+        result
+    }
+}
+
 impl FromJson<LeagueMatchParticipant> for LeagueMatchParticipant {
     fn from_parser(json_parser: JsonParser) -> LeagueMatchParticipant {
         LeagueMatchParticipant {
