@@ -4,4 +4,4 @@ mod constants;
 
 pub use json_parser::JsonParser;
 pub use formatter::{format_game_duration};
-pub use constants::{Queues};
+pub use constants::{Queues, Champions};

@@ -7,7 +7,7 @@ const DEFAULT_STRING_VALUE: &str = "";
 const DEFAULT_INTEGER_VALUE: u64 = 0;
 
 pub struct JsonParser {
-    json_data: Value,
+    pub json_data: Value,
 }
 
 impl JsonParser {
@@ -45,18 +45,18 @@ impl JsonParser {
         }
     }
 
-    pub fn safe_read_array(&self, key: &str) -> Option<&Vec<Value>> {
+    pub fn safe_read_array(&self, key: &str) -> Vec<Value> {
         let value: Option<&Value> = self.json_data.get(key);
 
         match value {
             Some(value) => {
                 let inner_value: Option<&Vec<Value>> = value.as_array();
                 match inner_value {
-                    Some(value) => Some(value),
-                    None => None,
+                    Some(value) => value.to_owned(),
+                    None => vec!(),
                 }
             }
-            None => None,
+            None => vec!(),
         }
     }
 }

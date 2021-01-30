@@ -2,9 +2,11 @@ use crate::models::FromJson;
 use crate::utils::JsonParser;
 use serde_json::{Error, Value};
 
+#[derive(Clone)]
 pub struct LeagueMatchParticipant {
-    participant_id: String,
-    champion_id: u64,
+    pub participant_id: u64,
+    account_id: String,
+    pub champion_id: u64,
     team_id: u64,
     spell_one_id: u64,
     spell_two_id: u64,
@@ -31,7 +33,8 @@ impl LeagueMatchParticipant {
 impl FromJson<LeagueMatchParticipant> for LeagueMatchParticipant {
     fn from_parser(json_parser: JsonParser) -> LeagueMatchParticipant {
         LeagueMatchParticipant {
-            participant_id: json_parser.safe_read_str("participantId"),
+            participant_id: json_parser.safe_read_int("participantId"),
+            account_id: json_parser.safe_read_str("accountid"),
             champion_id: json_parser.safe_read_int("championId"),
             team_id: json_parser.safe_read_int("teamId"),
             spell_one_id: json_parser.safe_read_int("spell1Id"),

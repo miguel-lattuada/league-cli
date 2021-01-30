@@ -2,7 +2,7 @@ use crate::models::{LeagueSummoner, LeagueMatches, FromJson, LeagueMatchesDetail
 use futures_util::future::join_all;
 
 // TODO: Move to ENV variables
-const RIOT_API_KEY: &'static str = "RGAPI-1f9e384e-0317-43b2-83e5-7ae52944c7d4";
+const RIOT_API_KEY: &'static str = "RGAPI-4cb655c6-4251-4afa-ad5d-3afbad854ef3";
 const BASE_URL: &'static str = "https://la2.api.riotgames.com/lol/";
 
 pub struct LeagueService {}

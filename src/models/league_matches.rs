@@ -14,9 +14,9 @@ impl FromJson<LeagueMatches> for LeagueMatches {
 
         let mut matches: Vec<LeagueMatch> = Vec::new();
 
-        let json_matches: &Vec<Value> = json_parser.safe_read_array("matches").unwrap();
+        let json_matches: Vec<Value> = json_parser.safe_read_array("matches");
 
-        for mut _match in json_matches.to_owned() {
+        for mut _match in json_matches {
             matches.push(LeagueMatch::from_json_object(_match.take()).unwrap());
         }
 
