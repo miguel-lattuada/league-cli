@@ -21,8 +21,4 @@ impl LeagueMatchesDetails {
         }
         result
     }
-    
-    pub fn append_match(mut self, league_match_detail: LeagueMatchDetail) {
-        self.matches_details.push(league_match_detail);
-    }
 }

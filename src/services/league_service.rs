@@ -1,8 +1,9 @@
-use crate::models::{LeagueSummoner, LeagueMatches, FromJson, LeagueMatchesDetails, LeagueMatchDetail};
+use crate::json::FromJson;
+use crate::models::{LeagueSummoner, LeagueMatches, LeagueMatchesDetails, LeagueMatchDetail};
 use futures_util::future::join_all;
 
 // TODO: Move to ENV variables
-const RIOT_API_KEY: &'static str = "RGAPI-4cb655c6-4251-4afa-ad5d-3afbad854ef3";
+const RIOT_API_KEY: &'static str = "RGAPI-f759eea7-9cf7-4031-8df2-117c9ec1e920";
 const BASE_URL: &'static str = "https://la2.api.riotgames.com/lol/";
 
 pub struct LeagueService {}
@@ -30,6 +31,7 @@ impl LeagueService {
         LeagueSummoner::from_json_string(&*json_string).unwrap()
     }
 
+    #[allow(dead_code)]
     pub async fn fetch_summoner_matches<'s>(summoner_name: &'s str) -> LeagueMatches {
         let league_summoner: LeagueSummoner = LeagueService::fetch_summoner(summoner_name).await;
 

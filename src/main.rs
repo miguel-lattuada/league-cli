@@ -1,6 +1,8 @@
 mod models;
 mod utils;
 mod services;
+mod cli;
+mod json;
 
 use models::{LeagueMatches, LeagueMatchesDetails, LeagueMatchDetail};
 use services::{LeagueService};
