@@ -1,5 +1,6 @@
 use crate::models::{
-    FromJson, LeagueMatch, LeagueMatchParticipant, LeagueMatchParticipantIdentity, Player,
+    FromJson, LeagueMatch, LeagueMatchParticipant, LeagueMatchParticipantIdentity, LeagueMatchTeam,
+    Player,
 };
 use crate::utils::{format_game_duration, Champions, JsonParser, Queues};
 use serde_json::{Error, Value};
@@ -11,6 +12,7 @@ pub struct LeagueMatchDetail {
     pub participant_identities: Vec<LeagueMatchParticipantIdentity>,
     pub game_duration: u64,
     pub queue_id: u64,
+    pub teams: Vec<LeagueMatchTeam>,
 }
 
 impl LeagueMatchDetail {
@@ -18,8 +20,19 @@ impl LeagueMatchDetail {
     // Consider CliDisplay { into_formatted_string() -> String }
     pub fn into_string(self) -> String {
         let mut result = String::from("");
+        let participant_info = &self.get_participant_info("Ricefields");
+        let team = &self.get_participant_team(participant_info.team_id);
 
+        result.push_str(&format!("{}", if team.win { "Victory" } else { "Defeat" }));
+        result.push_str(" @ ");
         result.push_str(&Queues.get(&self.queue_id).unwrap());
+        result.push_str("\n");
+        result.push_str(&format!(
+            "{} / {} / {}",
+            participant_info.stats.kills,
+            participant_info.stats.deaths,
+            participant_info.stats.assists
+        ));
         result.push_str("\n");
         result.push_str(&format!(
             "> Duration: {}",
@@ -28,9 +41,7 @@ impl LeagueMatchDetail {
         result.push_str("\n");
         result.push_str(&format!(
             "> Champion: {}",
-            Champions
-                .get(&self.get_participant_info("Ricefields").champion_id)
-                .unwrap()
+            Champions.get(&participant_info.champion_id).unwrap()
         ));
         // for participant in self.participants {
         //     result.push_str(&participant.into_string());
@@ -63,6 +74,17 @@ impl LeagueMatchDetail {
 
         participant_info.clone()
     }
+
+    pub fn get_participant_team(&self, team_id: u64) -> LeagueMatchTeam {
+        let team = &self
+            .teams
+            .to_owned()
+            .into_iter()
+            .find(|team| team.team_id == team_id)
+            .unwrap();
+            
+        team.clone()
+    }
 }
 
 impl FromJson<LeagueMatchDetail> for LeagueMatchDetail {
@@ -86,6 +108,21 @@ impl FromJson<LeagueMatchDetail> for LeagueMatchDetail {
             })
             .collect();
 
+        let teams: Vec<LeagueMatchTeam> = json_parser
+            .safe_read_array("teams")
+            .into_iter()
+            .map(|team: Value| {
+                let win: bool = match team.get("win").unwrap().as_str().unwrap() {
+                    "Win" => true,
+                    _ => false,
+                };
+
+                let team_id = team.get("teamId").unwrap().as_u64().unwrap();
+
+                LeagueMatchTeam { win, team_id }
+            })
+            .collect();
+
         let game_duration: u64 = json_parser.safe_read_int("gameDuration");
         let queue_id: u64 = json_parser.safe_read_int("queueId");
 
@@ -94,6 +131,7 @@ impl FromJson<LeagueMatchDetail> for LeagueMatchDetail {
             participant_identities,
             game_duration,
             queue_id,
+            teams,
         })
     }
 }
