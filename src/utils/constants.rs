@@ -6,6 +6,7 @@ lazy_static! {
         let mut map = HashMap::new();
         map.insert(&420, "Ranked Solo");
         map.insert(&450, "ARAM");
+        map.insert(&440, "Flex 5v5");
         map
     };
     
@@ -16,6 +17,8 @@ lazy_static! {
         map.insert(54, "Malphite".to_owned());
         map.insert(412, "Thresh".to_owned());
         map.insert(91, "Talon".to_owned());
+        map.insert(145, "Kaisa".to_owned());
+        map.insert(517, "Sylas".to_owned());
         map
     };
 }

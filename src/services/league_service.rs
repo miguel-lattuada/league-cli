@@ -3,7 +3,7 @@ use crate::models::{LeagueSummoner, LeagueMatches, LeagueMatchesDetails, LeagueM
 use futures_util::future::join_all;
 
 // TODO: Move to ENV variables
-const RIOT_API_KEY: &'static str = "RGAPI-f759eea7-9cf7-4031-8df2-117c9ec1e920";
+const RIOT_API_KEY: &'static str = "RGAPI-39ec455f-673d-424a-bc7e-1f685c319c84";
 const BASE_URL: &'static str = "https://la2.api.riotgames.com/lol/";
 
 pub struct LeagueService {}
@@ -42,7 +42,7 @@ impl LeagueService {
         LeagueMatches::from_json_string(&*json_string).unwrap()
     }
 
-    pub async fn fetch_summoner_matches_details<'s>(summoner_name: &'s str) -> LeagueMatchesDetails {
+    pub async fn fetch_summoner_matches_details<'s>(summoner_name: &'s str, count: usize) -> LeagueMatchesDetails {
         let league_summoner: LeagueSummoner = LeagueService::fetch_summoner(summoner_name).await;
 
         let matches_url = LeagueService::get_matches_url(league_summoner.account_id.as_str());
@@ -61,7 +61,7 @@ impl LeagueService {
         //     summoner_match_requests.push(LeagueService::fetch_summoner_match_detail(_match.game_id));
         // }
 
-        for index in 0..2 {
+        for index in 0..count {
             let _match = league_matches.matches.get(index).unwrap();
             summoner_match_requests.push(LeagueService::fetch_summoner_match_detail(_match.game_id));
         }
